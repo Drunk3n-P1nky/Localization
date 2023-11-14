@@ -1,0 +1,11 @@
+{
+  "name": "com.pinky.localization",
+  "version": "1.0.0",
+  "displayName": "Pinky Localization",
+  "description": "Lightweight localization",
+  "unity": "2022.3.4f1",
+  "author": {
+    "name": "Anton Dotsenko",
+    "email": "drunk3n.p1nky@gmail.com"
+  }
+}
