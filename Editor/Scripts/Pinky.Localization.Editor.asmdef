@@ -1,0 +1,18 @@
+{
+    "name": "Pinky.Localization.Editor",
+    "rootNamespace": "Pinky.Localization.Editor",
+    "references": [
+        "GUID:56fa200f5c7453443ac25aad329c344f"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
