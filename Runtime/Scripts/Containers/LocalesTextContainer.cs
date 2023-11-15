@@ -1,10 +1,10 @@
 using Pinky.Localization.Utility;
 using UnityEngine;
 
-namespace Pinky.Localization
+namespace Pinky.Localization.Containers
 {
     [CreateAssetMenu(fileName = "Locales Container", menuName = "Pinky/Localization/Create Locales Container")]
-    public class LocalesContainer : ScriptableObject
+    public class LocalesTextContainer : ScriptableObject
     {
         [SerializeField]
         private LocalizationTextMap localizationMap;
