@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -6,13 +5,13 @@ using Pinky.Localization.Containers;
 
 namespace Pinky.Localization
 {
-    public static class CSVLoader
+    public static class TXTLoader
     {
         public static SystemLanguage DefaultLanguage = SystemLanguage.English;
         private static LocalesTextContainer s_localesTextContainer;
         private static readonly char s_surround = '"';
 
-        public static Dictionary<string, string> ParseCSV(SystemLanguage targetLanguage)
+        public static Dictionary<string, string> ParseTXT(SystemLanguage targetLanguage)
         {
             if (!s_localesTextContainer)
             {
@@ -25,16 +24,16 @@ namespace Pinky.Localization
             if (!isSuccess)
                 s_localesTextContainer.TryGetLocalizationFile(DefaultLanguage, out csvFile);
 
-           return ParseCSV(csvFile);
+           return ParseTXT(csvFile);
         }
 
-        public static Dictionary<string, string> ParseCSV(SystemLanguage targetLanguage, LocalesTextContainer localesTextContainer) 
+        public static Dictionary<string, string> ParseTXT(SystemLanguage targetLanguage, LocalesTextContainer localesTextContainer) 
         {
             s_localesTextContainer = localesTextContainer;
-            return ParseCSV(targetLanguage);
+            return ParseTXT(targetLanguage);
         }
 
-        public static Dictionary<string, string> ParseCSV(TextAsset csvFile)
+        public static Dictionary<string, string> ParseTXT(TextAsset csvFile)
         {
             Dictionary<string, string> localizationMap = new();
 

@@ -40,7 +40,7 @@ namespace Pinky.Localization.Editor
             serializedObject.Update();
 
             keys.Add(NOT_SELECTED);
-            keys.AddRange(CSVLoader.ParseCSV(CSVLoader.DefaultLanguage, localesTextContainer).Keys);
+            keys.AddRange(TXTLoader.ParseTXT(TXTLoader.DefaultLanguage, localesTextContainer).Keys);
             selectedKeyIndex = Mathf.Clamp(keys.IndexOf(keyProperty.stringValue), 0, keys.Count - 1);
 
             EditorGUILayout.BeginVertical();
@@ -68,7 +68,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            Dictionary<string, string> localizationMap = CSVLoader.ParseCSV(language, localesTextContainer);
+            Dictionary<string, string> localizationMap = TXTLoader.ParseTXT(language, localesTextContainer);
 
             if(!localizationMap.TryGetValue(keyProperty.stringValue, out string localizedText))
             {

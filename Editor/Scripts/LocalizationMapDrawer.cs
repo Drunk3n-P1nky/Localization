@@ -1,4 +1,5 @@
 using Pinky.Localization.Utility;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ namespace Pinky.Localization.Editor
     [CustomPropertyDrawer(typeof(LocalizationTextMap))]
     public class LocalizationMapDrawer : PropertyDrawer
     {
+        private const string TXT = "txt";
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             Object targetObject = property.serializedObject.targetObject;
@@ -27,7 +30,7 @@ namespace Pinky.Localization.Editor
             SerializedProperty keysProperty = property.FindPropertyRelative("keys");
             SerializedProperty valuesProperty = property.FindPropertyRelative ("values");
             GUIContent languageContent = new("Language:");
-            GUIContent csvContent = new("CSV:");
+            GUIContent csvContent = new("TXT:");
             float languageContentWidth = GUI.skin.label.CalcSize(languageContent).x;
             float csvContentWidth = GUI.skin.label.CalcSize(csvContent).x;
 
@@ -43,6 +46,7 @@ namespace Pinky.Localization.Editor
             }
 
             DrawAddButton(new Rect(line.x + twoFifth, line.y, oneFifth, line.height), targetMap);
+            Validate(targetMap);
             EditorGUI.EndProperty();
         }
 
@@ -67,6 +71,28 @@ namespace Pinky.Localization.Editor
                 return;
 
             targetMap.Remove(key);
+        }
+
+        private void Validate(LocalizationTextMap targetMap)
+        {
+            List<SystemLanguage> keysOfValuesToRemove = new();
+
+            foreach (KeyValuePair<SystemLanguage, TextAsset> kvp in targetMap)
+            {
+                if(kvp.Value == null)
+                    continue;
+
+                string path = AssetDatabase.GetAssetPath(kvp.Value);
+
+                if (path.Split('.')[^1] != TXT)
+                {
+                    Debug.LogError($"{kvp.Value.name} is not in .{TXT} format");
+                    keysOfValuesToRemove.Add(kvp.Key);
+                }
+            }
+
+            for (int i = 0; i < keysOfValuesToRemove.Count; i++)
+                targetMap[keysOfValuesToRemove[i]] = null;
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Pinky.Localization
 
         public static void ChangeLanguage(SystemLanguage language)
         {
-            localizationMap = CSVLoader.ParseCSV(language);
+            localizationMap = TXTLoader.ParseTXT(language);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
