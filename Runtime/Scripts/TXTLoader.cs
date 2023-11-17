@@ -7,9 +7,9 @@ namespace Pinky.Localization
 {
     public static class TXTLoader
     {
+        private const char SURROUND = '"';
         public static SystemLanguage DefaultLanguage = SystemLanguage.English;
         private static LocalesTextContainer s_localesTextContainer;
-        private static readonly char s_surround = '"';
 
         public static Dictionary<string, string> ParseTXT(SystemLanguage targetLanguage)
         {
@@ -46,18 +46,43 @@ namespace Pinky.Localization
                 string line = lines[i];
                 string[] values = parser.Split(line);
 
-                string key = values[0].TrimStart(s_surround).TrimEnd(s_surround);
-                string value = values[1].TrimStart(' ', s_surround).TrimEnd(s_surround, ';');
+                string key = values[0].TrimStart(SURROUND).TrimEnd(SURROUND);
+                string value = values[1].TrimStart(' ', SURROUND).TrimEnd(SURROUND, ';');
                 localizationMap.Add(key, value);
             }
 
             return localizationMap;
         }
 
+        public static Dictionary<SystemLanguage, Dictionary<string, string>> ParseAllLocales()
+        {
+            Dictionary<SystemLanguage, Dictionary<string, string>> allLocales = new();
+
+#if UNITY_EDITOR
+            if (!s_localesTextContainer)
+                Initialize();
+#endif
+
+            SystemLanguage[] systemLanguages = s_localesTextContainer.GetKeys();
+
+            for (int i = 0; i < systemLanguages.Length; i++)
+            {
+                SystemLanguage currentLanguage = systemLanguages[i];
+                s_localesTextContainer.TryGetLocalizationFile(currentLanguage, out TextAsset file);
+
+                if (!file)
+                    continue;
+
+                allLocales.Add(currentLanguage, ParseTXT(file));
+            }
+
+            return allLocales;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         private static void Initialize()
         {
-            s_localesTextContainer = Resources.Load<LocalesTextContainer>("Locales Container");
+            s_localesTextContainer = Resources.Load<LocalesTextContainer>("Localization/Locales Text Container");
         }
     }
 }

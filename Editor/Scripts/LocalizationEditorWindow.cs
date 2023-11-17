@@ -2,23 +2,29 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
+using Pinky.Localization.Containers;
+using System;
 
 namespace Pinky.Localization.Editor
 {
     public class LocalizationEditorWindow : EditorWindow
     {
-        private TextAsset currentTXTFile = null;
+        //private TextAsset currentTXTFile = null;
+        private const string NOT_SELECTED = "Not selected";
         private const string TXT = "txt";
+        private LocalesTextContainer localesTextContainer;
         private Vector2 scroll = Vector2.zero;
         private string searchRequest = string.Empty;
         private List<string> keysToRemove;
+        private string[] localesOptions;
+        private int selectedLanguageIndex;
 
         [MenuItem("Localization/Open Table Editor")]
         public static void OpenWindow()
         {
             LocalizationEditorWindow window = GetWindow<LocalizationEditorWindow>();
             window.titleContent = new GUIContent("Localization Table Editor");
-            window.minSize = new Vector2(512f, 1024f);
+            window.minSize = new Vector2(512f, 812f);
             window.Show();
         }
 
@@ -26,6 +32,11 @@ namespace Pinky.Localization.Editor
         {
             string path = AssetDatabase.GetAssetPath(txtFile);
 
+            WriteChangesToFile(path, updatedMap);
+        }
+
+        public static void WriteChangesToFile(string path, Dictionary<string, string> updatedMap)
+        {
             TextWriter tw = new StreamWriter(path, false);
 
             int lastLineIndex = updatedMap.Count - 1;
@@ -50,25 +61,26 @@ namespace Pinky.Localization.Editor
         public void OnGUI()
         {
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            currentTXTFile = (TextAsset)EditorGUILayout.ObjectField(currentTXTFile, typeof(TextAsset), false);
+            selectedLanguageIndex = EditorGUILayout.Popup(new GUIContent("Language:"),selectedLanguageIndex, localesOptions);
 
-            if (currentTXTFile == null)
+            if (selectedLanguageIndex == 0)
             {
                 GUILayout.EndVertical();
                 return;
             }
 
-            string path = AssetDatabase.GetAssetPath(currentTXTFile);
+            SystemLanguage currentKey = Enum.Parse<SystemLanguage>(localesOptions[selectedLanguageIndex]);
 
-            if (path.Split('.')[^1] != TXT)
+            localesTextContainer.TryGetLocalizationFile(currentKey, out TextAsset localizationFile);
+
+            if(!localizationFile)
             {
-                Debug.LogWarning($"{currentTXTFile.name}'s extension is not .txt");
-                currentTXTFile = null;
+                Debug.LogError($"There is no text asset by {currentKey} key.");
                 GUILayout.EndVertical();
                 return;
             }
 
-            Dictionary<string, string> localizationMap = TXTLoader.ParseTXT(currentTXTFile);
+            Dictionary<string, string> localizationMap = TXTLoader.ParseTXT(localizationFile);
 
             GUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
             GUILayout.BeginHorizontal();
@@ -94,7 +106,7 @@ namespace Pinky.Localization.Editor
 
             foreach (KeyValuePair<string, string> kvp in localizationMap)
             {
-                bool shouldBeDisplayed = string.IsNullOrWhiteSpace(searchRequest) || kvp.Key.Contains(searchRequest, System.StringComparison.InvariantCultureIgnoreCase) || kvp.Value.Contains(searchRequest, System.StringComparison.InvariantCultureIgnoreCase);
+                bool shouldBeDisplayed = string.IsNullOrWhiteSpace(searchRequest) || kvp.Key.Contains(searchRequest, StringComparison.InvariantCultureIgnoreCase) || kvp.Value.Contains(searchRequest, StringComparison.InvariantCultureIgnoreCase);
 
                 if (!shouldBeDisplayed)
                     continue;
@@ -102,11 +114,11 @@ namespace Pinky.Localization.Editor
                 GUILayout.BeginHorizontal();
                 
                 GUILayout.Label(keyContent, GUILayout.MinWidth(keyLabelMinWidth), GUILayout.MaxWidth(keyLabelMaxWidth));
-                EditorGUILayout.TextField(kvp.Key, GUILayout.MaxWidth(widthUnit * 2));
+                EditorGUILayout.SelectableLabel(kvp.Key, EditorStyles.textField, GUILayout.MaxWidth(widthUnit * 2), GUILayout.Height(EditorGUIUtility.singleLineHeight));
 
                 float textAreaMaxHeight = GUI.skin.textArea.CalcHeight(new GUIContent(kvp.Value), valueWidth) + EditorGUIUtility.standardVerticalSpacing * 2;
                 GUILayout.Label(valueContent, GUILayout.MinWidth(valueLabelMinWidth), GUILayout.MaxWidth(valueLabelMaxWidth)); 
-                EditorGUILayout.TextArea(kvp.Value, GUILayout.MaxHeight(textAreaMaxHeight));
+                EditorGUILayout.SelectableLabel(kvp.Value, EditorStyles.textArea, GUILayout.MaxHeight(textAreaMaxHeight));
                 DrawEditButton(kvp, widthUnit);
                 DrawRemoveButton(kvp.Key, widthUnit * 0.5f);
                 GUILayout.EndHorizontal();
@@ -114,9 +126,15 @@ namespace Pinky.Localization.Editor
 
             if(keysToRemove.Count > 0)
             {
-                keysToRemove.ForEach(key => localizationMap.Remove(key));
+                var allLocales = TXTLoader.ParseAllLocales();
+
+                foreach (var kvp in allLocales) 
+                {
+                    keysToRemove.ForEach(key => kvp.Value.Remove(key));
+                    WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+                }
+
                 keysToRemove.Clear();
-                WriteChangesToFile(currentTXTFile, localizationMap);
             }
 
             GUILayout.EndScrollView();
@@ -130,7 +148,7 @@ namespace Pinky.Localization.Editor
                 return;
 
             KeyValueEditorWindow kvEditorWindow = GetWindow<KeyValueEditorWindow>();
-            kvEditorWindow.Open(kvp, currentTXTFile);
+            kvEditorWindow.Open(kvp, localesTextContainer.GetLocalizationFile(Enum.Parse<SystemLanguage>(localesOptions[selectedLanguageIndex])), localesTextContainer);
         }
 
         private void DrawRemoveButton(string key, float buttonWidth)
@@ -156,19 +174,32 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            localizationMap.Add(searchRequest, string.Empty);
+            var allLocales = TXTLoader.ParseAllLocales();
 
-            WriteChangesToFile(currentTXTFile, localizationMap);
+            foreach (var kvp in allLocales)
+            {
+                kvp.Value.Add(searchRequest, string.Empty);
+                WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+            }
         }
 
         private void OnEnable()
         {
             keysToRemove = new List<string>(1);
+            localesTextContainer = Resources.Load<LocalesTextContainer>("Localization/Locales Text Container");
+            SystemLanguage[] keys = localesTextContainer.GetKeys();
+            localesOptions = new string[keys.Length + 1];
+
+            localesOptions[0] = NOT_SELECTED;
+
+            for (int i = 1; i < localesOptions.Length; i++)
+                localesOptions[i] = keys[i - 1].ToString();
+
+            selectedLanguageIndex = 0;
         }
 
         private void OnDisable()
         {
-            currentTXTFile = null;
             keysToRemove = null;
         }
     }

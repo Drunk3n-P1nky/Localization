@@ -9,9 +9,11 @@ namespace Pinky.Localization.Editor
     public class LocalizationMapDrawer : PropertyDrawer
     {
         private const string TXT = "txt";
+        private TextAsset[] localizationFiles;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            localizationFiles = Resources.LoadAll<TextAsset>("Localization");
             Object targetObject = property.serializedObject.targetObject;
             LocalizationTextMap map = fieldInfo.GetValue(targetObject) as LocalizationTextMap;
             return EditorGUIUtility.singleLineHeight * map.Count + EditorGUIUtility.standardVerticalSpacing * map.Count + EditorGUIUtility.singleLineHeight;
@@ -21,6 +23,7 @@ namespace Pinky.Localization.Editor
         {
             LocalizationTextMap targetMap = fieldInfo.GetValue(property.serializedObject.targetObject) as LocalizationTextMap;
 
+            EditorGUI.BeginChangeCheck();
             EditorGUI.BeginProperty(position, GUIContent.none, property);
 
             Rect line = new(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
@@ -30,24 +33,42 @@ namespace Pinky.Localization.Editor
             SerializedProperty keysProperty = property.FindPropertyRelative("keys");
             SerializedProperty valuesProperty = property.FindPropertyRelative ("values");
             GUIContent languageContent = new("Language:");
-            GUIContent csvContent = new("TXT:");
+            GUIContent txtContent = new("TXT:");
             float languageContentWidth = GUI.skin.label.CalcSize(languageContent).x;
-            float csvContentWidth = GUI.skin.label.CalcSize(csvContent).x;
+            float txtContentWidth = GUI.skin.label.CalcSize(txtContent).x;
 
             for (int i = 0; i < targetMap.Count; i++)
             {
                 SerializedProperty iKeyProperty = keysProperty.GetArrayElementAtIndex(i);
+                SerializedProperty iValueProperty = valuesProperty.GetArrayElementAtIndex(i);
                 EditorGUI.PrefixLabel(new Rect(line.x, line.y, twoFifth, line.height), languageContent, EditorStyles.label); 
                 EditorGUI.PropertyField(new Rect(line.x + languageContentWidth, line.y, twoFifth - languageContentWidth, line.height), iKeyProperty, GUIContent.none);
-                EditorGUI.PrefixLabel(new Rect(line.x + twoFifth, line.y, twoFifth, line.y), csvContent);
-                EditorGUI.ObjectField(new Rect(line.x + twoFifth + csvContentWidth, line.y, twoFifth - csvContentWidth, line.height), valuesProperty.GetArrayElementAtIndex(i), GUIContent.none);
-                DrawRemoveButton(new Rect(line.x + twoFifth * 2, line.y, oneFifth, line.height), targetMap, (SystemLanguage)iKeyProperty.intValue);
+                EditorGUI.PrefixLabel(new Rect(line.x + twoFifth, line.y, twoFifth, line.y), txtContent);
+
+                string fileName = ((SystemLanguage)iKeyProperty.intValue).ToString()[0..3].ToLower();
+                bool isLocalizationFileFound = TryFindFile(fileName, iValueProperty);
+                EditorGUI.ObjectField(new Rect(line.x + twoFifth + txtContentWidth, line.y, twoFifth - txtContentWidth, line.height), iValueProperty, GUIContent.none);
+
+                if (isLocalizationFileFound)
+                {
+                    DrawRemoveButton(new Rect(line.x + twoFifth * 2, line.y, oneFifth, line.height), targetMap, (SystemLanguage)iKeyProperty.intValue, EditorStyles.miniButtonMid);
+                }
+                else
+                {
+                    DrawCreateButton(new Rect(line.x + twoFifth * 2, line.y, oneFifth * 0.5f, line.height), iValueProperty, fileName);
+                    DrawRemoveButton(new Rect(line.x + twoFifth * 2 + oneFifth * 0.5f, line.y, oneFifth * 0.5f, line.height), targetMap, (SystemLanguage)iKeyProperty.intValue, EditorStyles.miniButtonRight);
+                }
+
                 line = new Rect(line.x, line.y + EditorGUIUtility.standardVerticalSpacing + EditorGUIUtility.singleLineHeight, line.width, line.height);
             }
 
             DrawAddButton(new Rect(line.x + twoFifth, line.y, oneFifth, line.height), targetMap);
             Validate(targetMap);
             EditorGUI.EndProperty();
+            if (EditorGUI.EndChangeCheck())
+            {
+                localizationFiles = Resources.LoadAll<TextAsset>("Localization");
+            }
         }
 
         private void DrawAddButton(Rect rect, LocalizationTextMap targetMap)
@@ -63,9 +84,9 @@ namespace Pinky.Localization.Editor
                 throw new System.Exception($"You already have {nameof(SystemLanguage.Unknown)} key. Change it before adding new one");
         }
 
-        private void DrawRemoveButton(Rect rect, LocalizationTextMap targetMap, SystemLanguage key) 
+        private void DrawRemoveButton(Rect rect, LocalizationTextMap targetMap, SystemLanguage key, GUIStyle buttonStyle) 
         {
-            bool isPressed = GUI.Button(rect, "-", EditorStyles.miniButtonMid);
+            bool isPressed = GUI.Button(rect, "-", buttonStyle);
 
             if (!isPressed) 
                 return;
@@ -93,6 +114,43 @@ namespace Pinky.Localization.Editor
 
             for (int i = 0; i < keysOfValuesToRemove.Count; i++)
                 targetMap[keysOfValuesToRemove[i]] = null;
+        }
+
+        private bool TryFindFile(string fileName, SerializedProperty valueProperty)
+        {
+            TextAsset targetAsset = System.Array.Find(localizationFiles, asset => asset.name == fileName);
+
+            if (targetAsset)
+            {
+                valueProperty.objectReferenceValue = targetAsset;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void DrawCreateButton(Rect buttonRect, SerializedProperty valueProperty, string futureFileName)
+        {
+            bool isPressed = GUI.Button(buttonRect, "create", EditorStyles.miniButtonLeft);
+
+            if (!isPressed)
+                return;
+
+            string path = $"Resources/Localization/{futureFileName}.txt";
+
+            if (localizationFiles.Length > 0)
+            {
+                var map = TXTLoader.ParseTXT(localizationFiles[0]);
+
+                Dictionary<string, string> mapWithoutValues = new();
+
+                foreach (var key in map.Keys)
+                    mapWithoutValues[key] = string.Empty;
+
+                LocalizationEditorWindow.WriteChangesToFile(Application.dataPath + '/' + path, mapWithoutValues);
+            }
+
+            valueProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/" + path);
         }
     }
 }

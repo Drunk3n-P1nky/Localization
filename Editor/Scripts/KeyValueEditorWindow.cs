@@ -1,3 +1,4 @@
+using Pinky.Localization.Containers;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -7,18 +8,20 @@ namespace Pinky.Localization.Editor
 {
     public class KeyValueEditorWindow : EditorWindow
     {
+        private LocalesTextContainer localesTextContainer;
         private Dictionary<string, string> localizationMap;
         private KeyValuePair<string, string> initialKVP;
-        private TextAsset currentTXTFile;
+        private TextAsset txtFile;
         private string changedKey;
         private string changedValue;
 
-        public void Open(KeyValuePair<string, string> kvp, TextAsset txtFile)
+        public void Open(KeyValuePair<string, string> kvp, TextAsset txtFile, LocalesTextContainer localesTextContainer)
         {
             initialKVP = kvp;
             initialKVP.Deconstruct(out changedKey, out changedValue);
-            currentTXTFile = txtFile;
-            localizationMap = TXTLoader.ParseTXT(currentTXTFile);
+            this.txtFile = txtFile;
+            localizationMap = TXTLoader.ParseTXT(this.txtFile);
+            this.localesTextContainer = localesTextContainer;
             titleContent = new GUIContent("Key Value Editor");
             minSize = new Vector2(512f, 256f);
             position = new Rect(Event.current.mousePosition, minSize);
@@ -29,7 +32,6 @@ namespace Pinky.Localization.Editor
 
         public void OnGUI()
         {
-            EditorGUI.BeginChangeCheck();
             float widthUnit = position.width / 6;
             GUIContent keyContent = new("Key:");
             GUI.skin.label.CalcMinMaxWidth(keyContent, out float keyLabelMinWidth, out float keyLabelMaxWidth);
@@ -54,13 +56,6 @@ namespace Pinky.Localization.Editor
             DrawCancelButton(buttonRect);
 
             GUILayout.EndVertical();
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorUtility.SetDirty(this);
-                Undo.RegisterCompleteObjectUndo(this, "keyValueEditorWindow");
-                Undo.FlushUndoRecordObjects();
-            }
         }
 
         private void DrawSaveButton(Rect buttonRect)
@@ -70,16 +65,30 @@ namespace Pinky.Localization.Editor
             if (!isPressed)
                 return;
 
-            if(initialKVP.Key != changedKey && localizationMap.ContainsKey(changedKey))
+            if(initialKVP.Key != changedKey)
             {
-                PopupWindow.Show(buttonRect, new KeyValuePopupContent());
-                return;
+                if (localizationMap.ContainsKey(changedKey))
+                {
+                    PopupWindow.Show(buttonRect, new KeyValuePopupContent());
+                    return;
+                }
+
+                var allLocales = TXTLoader.ParseAllLocales();
+
+                foreach (var kvp in allLocales)
+                {
+                    string oldValue = kvp.Value[initialKVP.Key];
+                    kvp.Value.Remove(initialKVP.Key);
+                    kvp.Value.Add(changedKey, oldValue);
+                    LocalizationEditorWindow.WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+                }
             }
 
             localizationMap.Remove(initialKVP.Key);
             localizationMap.Add(changedKey, changedValue);
 
-            LocalizationEditorWindow.WriteChangesToFile(currentTXTFile, localizationMap);
+            LocalizationEditorWindow.WriteChangesToFile(txtFile, localizationMap);
+            Close();
         }
 
         private void DrawCancelButton(Rect buttonRect)
@@ -99,7 +108,7 @@ namespace Pinky.Localization.Editor
             localizationMap.Remove(changedKey);
             localizationMap.Add(initialKVP.Key, initialKVP.Value);
 
-            LocalizationEditorWindow.WriteChangesToFile(currentTXTFile, localizationMap);
+            LocalizationEditorWindow.WriteChangesToFile(txtFile, localizationMap);
 
             changedKey = initialKVP.Key;
             changedValue = initialKVP.Value;
@@ -107,7 +116,7 @@ namespace Pinky.Localization.Editor
 
         private void OnDisable()
         {
-            currentTXTFile = null;
+            txtFile = null;
             initialKVP = default;
             changedKey = null;
             changedValue = null;

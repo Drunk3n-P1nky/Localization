@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Pinky.Localization.Containers
 {
-    [CreateAssetMenu(fileName = "Locales Container", menuName = "Pinky/Localization/Create Locales Container")]
+    [CreateAssetMenu(fileName = "Locales Text Container", menuName = "Pinky/Localization/Create Locales Container")]
     public class LocalesTextContainer : ScriptableObject
     {
         [SerializeField]
@@ -13,6 +13,18 @@ namespace Pinky.Localization.Containers
         {
             bool isSuccess = localizationMap.TryGetValue(language, out localizationFile);
             return isSuccess;
+        }
+
+        public TextAsset GetLocalizationFile(SystemLanguage language) 
+        {
+            return localizationMap[language];
+        }
+
+        public SystemLanguage[] GetKeys()
+        {
+            SystemLanguage[] keys = new SystemLanguage[localizationMap.Count];
+            localizationMap.Keys.CopyTo(keys, 0);
+            return keys;
         }
     }
 }
