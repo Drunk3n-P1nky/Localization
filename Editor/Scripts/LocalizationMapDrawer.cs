@@ -138,17 +138,14 @@ namespace Pinky.Localization.Editor
 
             string path = $"Resources/Localization/{futureFileName}.txt";
 
-            if (localizationFiles.Length > 0)
-            {
-                var map = TXTLoader.ParseTXT(localizationFiles[0]);
+            var map = localizationFiles.Length > 0 ? TXTLoader.ParseTXT(localizationFiles[0]) : new Dictionary<string, string>();
 
-                Dictionary<string, string> mapWithoutValues = new();
+            Dictionary<string, string> mapWithoutValues = new();
 
-                foreach (var key in map.Keys)
-                    mapWithoutValues[key] = string.Empty;
+            foreach (var key in map.Keys)
+                mapWithoutValues[key] = string.Empty;
 
-                LocalizationEditorWindow.WriteChangesToFile(Application.dataPath + '/' + path, mapWithoutValues);
-            }
+            LocalizationEditorWindow.WriteChangesToFile(Application.dataPath + '/' + path, mapWithoutValues);
 
             valueProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/" + path);
         }

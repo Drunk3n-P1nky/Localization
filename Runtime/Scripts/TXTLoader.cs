@@ -37,6 +37,9 @@ namespace Pinky.Localization
         {
             Dictionary<string, string> localizationMap = new();
 
+            if (string.IsNullOrEmpty(csvFile.text))
+                return localizationMap;
+
             string[] lines = Regex.Split(csvFile.text, @"(?<="")\s*;\s*(?:\r\n|\n|\r)", RegexOptions.Compiled);
 
             Regex parser = new(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))", RegexOptions.Compiled);
