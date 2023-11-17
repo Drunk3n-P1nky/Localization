@@ -40,7 +40,7 @@ namespace Pinky.Localization.Editor
             serializedObject.Update();
 
             keys.Add(NOT_SELECTED);
-            keys.AddRange(TXTLoader.Deserialize(TXTLoader.DefaultLanguage, localesTextContainer).Keys);
+            keys.AddRange(LocaleSerializer.Deserialize(LocaleSerializer.DefaultLanguage, localesTextContainer).Keys);
             selectedKeyIndex = Mathf.Clamp(keys.IndexOf(keyProperty.stringValue), 0, keys.Count - 1);
 
             EditorGUILayout.BeginVertical();
@@ -68,7 +68,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            Dictionary<string, string> localizationMap = TXTLoader.Deserialize(language, localesTextContainer);
+            Dictionary<string, string> localizationMap = LocaleSerializer.Deserialize(language, localesTextContainer);
 
             if(!localizationMap.TryGetValue(keyProperty.stringValue, out string localizedText))
             {

@@ -36,7 +36,7 @@ namespace Pinky.Localization.Editor
 
         public static void WriteChangesToFile(string path, Dictionary<string, string> updatedMap)
         {
-            byte[] bytes = TXTLoader.Serialize(updatedMap);
+            byte[] bytes = LocaleSerializer.Serialize(updatedMap);
             FileStream stream = new(path, FileMode.OpenOrCreate, FileAccess.Write);
             stream.Seek(0, SeekOrigin.Begin);
             stream.Write(bytes, 0, bytes.Length);
@@ -66,7 +66,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            Dictionary<string, string> localizationMap = TXTLoader.Deserialize(localizationFile);
+            Dictionary<string, string> localizationMap = LocaleSerializer.Deserialize(localizationFile);
 
             GUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
             GUILayout.BeginHorizontal();
@@ -112,7 +112,7 @@ namespace Pinky.Localization.Editor
 
             if(keysToRemove.Count > 0)
             {
-                var allLocales = TXTLoader.DeserializeLocales();
+                var allLocales = LocaleSerializer.DeserializeLocales();
 
                 foreach (var kvp in allLocales) 
                 {
@@ -160,7 +160,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            var allLocales = TXTLoader.DeserializeLocales();
+            var allLocales = LocaleSerializer.DeserializeLocales();
 
             foreach (var kvp in allLocales)
             {

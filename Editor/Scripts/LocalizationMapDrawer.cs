@@ -138,7 +138,7 @@ namespace Pinky.Localization.Editor
 
             string path = $"Resources/Localization/{futureFileName}.{FORMAT}";
 
-            var map = localizationFiles.Length > 1 ? TXTLoader.Deserialize(localizationFiles[0]) : new Dictionary<string, string>();
+            var map = localizationFiles.Length > 1 ? LocaleSerializer.Deserialize(localizationFiles[0]) : new Dictionary<string, string>();
 
             Dictionary<string, string> mapWithoutValues = new();
 

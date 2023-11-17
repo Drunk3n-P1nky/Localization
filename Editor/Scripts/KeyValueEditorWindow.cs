@@ -20,7 +20,7 @@ namespace Pinky.Localization.Editor
             initialKVP = kvp;
             initialKVP.Deconstruct(out changedKey, out changedValue);
             this.txtFile = txtFile;
-            localizationMap = TXTLoader.Deserialize(this.txtFile);
+            localizationMap = LocaleSerializer.Deserialize(this.txtFile);
             this.localesTextContainer = localesTextContainer;
             titleContent = new GUIContent("Key Value Editor");
             minSize = new Vector2(512f, 256f);
@@ -71,7 +71,7 @@ namespace Pinky.Localization.Editor
                     return;
                 }
 
-                var allLocales = TXTLoader.DeserializeLocales();
+                var allLocales = LocaleSerializer.DeserializeLocales();
 
                 foreach (var kvp in allLocales)
                 {

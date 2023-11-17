@@ -22,7 +22,7 @@ namespace Pinky.Localization
 
         public static void ChangeLanguage(SystemLanguage language)
         {
-            localizationMap = TXTLoader.Deserialize(language);
+            localizationMap = LocaleSerializer.Deserialize(language);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
