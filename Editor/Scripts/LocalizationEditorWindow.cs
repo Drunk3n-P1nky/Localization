@@ -11,7 +11,6 @@ namespace Pinky.Localization.Editor
     {
         //private TextAsset currentTXTFile = null;
         private const string NOT_SELECTED = "Not selected";
-        private const string TXT = "txt";
         private LocalesTextContainer localesTextContainer;
         private Vector2 scroll = Vector2.zero;
         private string searchRequest = string.Empty;
@@ -37,24 +36,11 @@ namespace Pinky.Localization.Editor
 
         public static void WriteChangesToFile(string path, Dictionary<string, string> updatedMap)
         {
-            TextWriter tw = new StreamWriter(path, false);
-
-            int lastLineIndex = updatedMap.Count - 1;
-            int index = 0;
-
-            string pattern = "\"{0}\", \"{1}\";";
-
-            foreach (KeyValuePair<string, string> kvp in updatedMap)
-            {
-                if (index == lastLineIndex)
-                    tw.Write(string.Format(pattern, kvp.Key, kvp.Value));
-                else
-                    tw.WriteLine(string.Format(pattern, kvp.Key, kvp.Value));
-
-                index++;
-            }
-
-            tw.Close();
+            byte[] bytes = TXTLoader.Serialize(updatedMap);
+            FileStream stream = new(path, FileMode.OpenOrCreate, FileAccess.Write);
+            stream.Seek(0, SeekOrigin.Begin);
+            stream.Write(bytes, 0, bytes.Length);
+            stream.Close();
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
         }
 
@@ -80,7 +66,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            Dictionary<string, string> localizationMap = TXTLoader.ParseTXT(localizationFile);
+            Dictionary<string, string> localizationMap = TXTLoader.Deserialize(localizationFile);
 
             GUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
             GUILayout.BeginHorizontal();
@@ -126,7 +112,7 @@ namespace Pinky.Localization.Editor
 
             if(keysToRemove.Count > 0)
             {
-                var allLocales = TXTLoader.ParseAllLocales();
+                var allLocales = TXTLoader.DeserializeLocales();
 
                 foreach (var kvp in allLocales) 
                 {
@@ -174,7 +160,7 @@ namespace Pinky.Localization.Editor
                 return;
             }
 
-            var allLocales = TXTLoader.ParseAllLocales();
+            var allLocales = TXTLoader.DeserializeLocales();
 
             foreach (var kvp in allLocales)
             {

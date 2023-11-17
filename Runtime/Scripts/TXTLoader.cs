@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using Pinky.Localization.Containers;
 
@@ -7,11 +6,15 @@ namespace Pinky.Localization
 {
     public static class TXTLoader
     {
-        private const char SURROUND = '"';
         public static SystemLanguage DefaultLanguage = SystemLanguage.English;
         private static LocalesTextContainer s_localesTextContainer;
 
-        public static Dictionary<string, string> ParseTXT(SystemLanguage targetLanguage)
+        public static byte[] Serialize(Dictionary<string, string> localizationMap)
+        {
+            return MessagePack.MessagePackSerializer.Serialize(localizationMap);
+        }
+
+        public static Dictionary<string, string> Deserialize(SystemLanguage targetLanguage)
         {
             if (!s_localesTextContainer)
             {
@@ -19,42 +22,27 @@ namespace Pinky.Localization
                 return new Dictionary<string, string>();
             }
 
-            bool isSuccess = s_localesTextContainer.TryGetLocalizationFile(targetLanguage, out TextAsset csvFile);
+            bool isSuccess = s_localesTextContainer.TryGetLocalizationFile(targetLanguage, out TextAsset binaryFile);
 
             if (!isSuccess)
-                s_localesTextContainer.TryGetLocalizationFile(DefaultLanguage, out csvFile);
+                s_localesTextContainer.TryGetLocalizationFile(DefaultLanguage, out binaryFile);
 
-           return ParseTXT(csvFile);
+           return Deserialize(binaryFile);
         }
 
-        public static Dictionary<string, string> ParseTXT(SystemLanguage targetLanguage, LocalesTextContainer localesTextContainer) 
+        public static Dictionary<string, string> Deserialize(SystemLanguage targetLanguage, LocalesTextContainer localesTextContainer) 
         {
             s_localesTextContainer = localesTextContainer;
-            return ParseTXT(targetLanguage);
+            return Deserialize(targetLanguage);
         }
 
-        public static Dictionary<string, string> ParseTXT(TextAsset csvFile)
+        public static Dictionary<string, string> Deserialize(TextAsset binaryFile)
         {
-            Dictionary<string, string> localizationMap = new();
-
-            string[] lines = Regex.Split(csvFile.text, @"(?<="")\s*;\s*(?:\r\n|\n|\r)", RegexOptions.Compiled);
-
-            Regex parser = new(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))", RegexOptions.Compiled);
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                string[] values = parser.Split(line);
-
-                string key = values[0].TrimStart(SURROUND).TrimEnd(SURROUND);
-                string value = values[1].TrimStart(' ', SURROUND).TrimEnd(SURROUND, ';');
-                localizationMap.Add(key, value);
-            }
-
+            Dictionary<string, string> localizationMap = MessagePack.MessagePackSerializer.Deserialize<Dictionary<string, string>>(binaryFile.bytes);
             return localizationMap;
         }
 
-        public static Dictionary<SystemLanguage, Dictionary<string, string>> ParseAllLocales()
+        public static Dictionary<SystemLanguage, Dictionary<string, string>> DeserializeLocales()
         {
             Dictionary<SystemLanguage, Dictionary<string, string>> allLocales = new();
 
@@ -73,7 +61,7 @@ namespace Pinky.Localization
                 if (!file)
                     continue;
 
-                allLocales.Add(currentLanguage, ParseTXT(file));
+                allLocales.Add(currentLanguage, Deserialize(file));
             }
 
             return allLocales;

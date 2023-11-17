@@ -8,7 +8,7 @@ namespace Pinky.Localization.Editor
     [CustomPropertyDrawer(typeof(LocalizationTextMap))]
     public class LocalizationMapDrawer : PropertyDrawer
     {
-        private const string TXT = "txt";
+        private const string FORMAT = "bytes";
         private TextAsset[] localizationFiles;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -33,7 +33,7 @@ namespace Pinky.Localization.Editor
             SerializedProperty keysProperty = property.FindPropertyRelative("keys");
             SerializedProperty valuesProperty = property.FindPropertyRelative ("values");
             GUIContent languageContent = new("Language:");
-            GUIContent txtContent = new("TXT:");
+            GUIContent txtContent = new("Binary:");
             float languageContentWidth = GUI.skin.label.CalcSize(languageContent).x;
             float txtContentWidth = GUI.skin.label.CalcSize(txtContent).x;
 
@@ -105,9 +105,9 @@ namespace Pinky.Localization.Editor
 
                 string path = AssetDatabase.GetAssetPath(kvp.Value);
 
-                if (path.Split('.')[^1] != TXT)
+                if (path.Split('.')[^1] != FORMAT)
                 {
-                    Debug.LogError($"{kvp.Value.name} is not in .{TXT} format");
+                    Debug.LogError($"{kvp.Value.name} is not in .{FORMAT} format");
                     keysOfValuesToRemove.Add(kvp.Key);
                 }
             }
@@ -136,20 +136,16 @@ namespace Pinky.Localization.Editor
             if (!isPressed)
                 return;
 
-            string path = $"Resources/Localization/{futureFileName}.txt";
+            string path = $"Resources/Localization/{futureFileName}.{FORMAT}";
 
-            if (localizationFiles.Length > 0)
-            {
-                var map = TXTLoader.ParseTXT(localizationFiles[0]);
+            var map = localizationFiles.Length > 1 ? TXTLoader.Deserialize(localizationFiles[0]) : new Dictionary<string, string>();
 
-                Dictionary<string, string> mapWithoutValues = new();
+            Dictionary<string, string> mapWithoutValues = new();
 
-                foreach (var key in map.Keys)
-                    mapWithoutValues[key] = string.Empty;
+            foreach (var key in map.Keys)
+                mapWithoutValues[key] = string.Empty;
 
-                LocalizationEditorWindow.WriteChangesToFile(Application.dataPath + '/' + path, mapWithoutValues);
-            }
-
+            LocalizationEditorWindow.WriteChangesToFile(Application.dataPath + '/' + path, mapWithoutValues);
             valueProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/" + path);
         }
     }
