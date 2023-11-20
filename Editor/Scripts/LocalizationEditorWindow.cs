@@ -9,7 +9,6 @@ namespace Pinky.Localization.Editor
 {
     public class LocalizationEditorWindow : EditorWindow
     {
-        //private TextAsset currentTXTFile = null;
         private const string NOT_SELECTED = "Not selected";
         private LocalesTextContainer localesTextContainer;
         private Vector2 scroll = Vector2.zero;
