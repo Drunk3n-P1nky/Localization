@@ -1,2 +1,2 @@
 # Localization
-This is Localization library for Unity projects.
+This is lightweight Localization library for Unity projects.
