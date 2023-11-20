@@ -6,7 +6,7 @@
   "unity": "2022.3",
   "dependencies": {
     "com.unity.textmeshpro": "3.0.6",
-    "com.neuecc.messagepack": "2.5.124"
+    "com.neuecc.messagepack": "https://github.com/neuecc/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack#2.5.124"
   },
   "author": {
     "name": "Anton Dotsenko",
