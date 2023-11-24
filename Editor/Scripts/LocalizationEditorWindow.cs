@@ -56,7 +56,7 @@ namespace Pinky.Localization.Editor
 
             SystemLanguage currentKey = Enum.Parse<SystemLanguage>(localesOptions[selectedLanguageIndex]);
 
-            localesTextContainer.TryGetLocalizationFile(currentKey, out TextAsset localizationFile);
+            localesTextContainer.TryGetLocalizationAsset(currentKey, out TextAsset localizationFile);
 
             if(!localizationFile)
             {
@@ -116,7 +116,7 @@ namespace Pinky.Localization.Editor
                 foreach (var kvp in allLocales) 
                 {
                     keysToRemove.ForEach(key => kvp.Value.Remove(key));
-                    WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+                    WriteChangesToFile(localesTextContainer.GetLocalizationAsset(kvp.Key), kvp.Value);
                 }
 
                 keysToRemove.Clear();
@@ -133,7 +133,7 @@ namespace Pinky.Localization.Editor
                 return;
 
             KeyValueEditorWindow kvEditorWindow = GetWindow<KeyValueEditorWindow>();
-            kvEditorWindow.Open(kvp, localesTextContainer.GetLocalizationFile(Enum.Parse<SystemLanguage>(localesOptions[selectedLanguageIndex])), localesTextContainer);
+            kvEditorWindow.Open(kvp, localesTextContainer.GetLocalizationAsset(Enum.Parse<SystemLanguage>(localesOptions[selectedLanguageIndex])), localesTextContainer);
         }
 
         private void DrawRemoveButton(string key, float buttonWidth)
@@ -164,7 +164,7 @@ namespace Pinky.Localization.Editor
             foreach (var kvp in allLocales)
             {
                 kvp.Value.Add(searchRequest, string.Empty);
-                WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+                WriteChangesToFile(localesTextContainer.GetLocalizationAsset(kvp.Key), kvp.Value);
             }
         }
 

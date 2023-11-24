@@ -20,7 +20,7 @@ namespace Pinky.Localization.Editor
         {
             keyProperty = serializedObject.FindProperty("key");
             localizedTextBehaviour = (LocalizedTextBehaviour)target;
-            localesTextContainer = Resources.Load<LocalesTextContainer>("Locales Container");
+            localesTextContainer = Resources.Load<LocalesTextContainer>("Localization/Locales Text Container");
 
             keys = new List<string>();
             keys.Insert(0, NOT_SELECTED);
@@ -77,6 +77,7 @@ namespace Pinky.Localization.Editor
             }
 
             tmpText.SetText(localizedText);
+            SceneView.RepaintAll();
         }
     }
 }

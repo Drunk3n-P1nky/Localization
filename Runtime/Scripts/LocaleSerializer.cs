@@ -22,10 +22,10 @@ namespace Pinky.Localization
                 return new Dictionary<string, string>();
             }
 
-            bool isSuccess = s_localesTextContainer.TryGetLocalizationFile(targetLanguage, out TextAsset binaryFile);
+            bool isSuccess = s_localesTextContainer.TryGetLocalizationAsset(targetLanguage, out TextAsset binaryFile);
 
             if (!isSuccess)
-                s_localesTextContainer.TryGetLocalizationFile(DefaultLanguage, out binaryFile);
+                s_localesTextContainer.TryGetLocalizationAsset(DefaultLanguage, out binaryFile);
 
            return Deserialize(binaryFile);
         }
@@ -56,7 +56,7 @@ namespace Pinky.Localization
             for (int i = 0; i < systemLanguages.Length; i++)
             {
                 SystemLanguage currentLanguage = systemLanguages[i];
-                s_localesTextContainer.TryGetLocalizationFile(currentLanguage, out TextAsset file);
+                s_localesTextContainer.TryGetLocalizationAsset(currentLanguage, out TextAsset file);
 
                 if (!file)
                     continue;
@@ -72,5 +72,12 @@ namespace Pinky.Localization
         {
             s_localesTextContainer = Resources.Load<LocalesTextContainer>("Localization/Locales Text Container");
         }
+
+        #region Unity Editor
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void InitializeInEditor() => Initialize();
+#endif
+#endregion
     }
 }
