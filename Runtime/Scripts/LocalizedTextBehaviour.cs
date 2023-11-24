@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 namespace Pinky.Localization
 {
@@ -13,7 +14,7 @@ namespace Pinky.Localization
         private void Awake()
         {
             tmpText = GetComponent<TMP_Text>();
-            tmpText.text = LocalizationSystem.GetLocalizedText(key);
+            tmpText.text = LocalizationService.GetLocalizedText(key);
         }
     }
 }

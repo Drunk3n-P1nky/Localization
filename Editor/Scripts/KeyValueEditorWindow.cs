@@ -78,7 +78,7 @@ namespace Pinky.Localization.Editor
                     string oldValue = kvp.Value[initialKVP.Key];
                     kvp.Value.Remove(initialKVP.Key);
                     kvp.Value.Add(changedKey, oldValue);
-                    LocalizationEditorWindow.WriteChangesToFile(localesTextContainer.GetLocalizationFile(kvp.Key), kvp.Value);
+                    LocalizationEditorWindow.WriteChangesToFile(localesTextContainer.GetLocalizationAsset(kvp.Key), kvp.Value);
                 }
             }
 

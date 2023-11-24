@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Pinky.Localization.Editor
 {
     [CustomPropertyDrawer(typeof(LocalizationTextMap))]
-    public class LocalizationMapDrawer : PropertyDrawer
+    public class LocalizationTextMapDrawer : PropertyDrawer
     {
         private const string FORMAT = "bytes";
         private TextAsset[] localizationFiles;
