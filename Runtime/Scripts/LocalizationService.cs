@@ -36,7 +36,11 @@ namespace Pinky.Localization
         public static void ChangeLanguage(SystemLanguage language)
         {
             localizationTextMap = LocaleSerializer.Deserialize(language);
-            localizationSpriteMap = Resources.Load<LocalesSpriteContainer>("Localization/Locales Sprite Container").GetLocalizationAsset(language);
+
+            LocalesSpriteContainer container = Resources.Load<LocalesSpriteContainer>("Localization/Locales Sprite Container");
+
+            if(container)
+                container.TryGetLocalizationAsset(language, out localizationSpriteMap);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
